@@ -46,6 +46,7 @@ gluster volume start $VOLUME_NAME
 
 # secure glusterfs
 gluster volume set $VOLUME_NAME server.allow-insecure on
+gluster volume set $VOLUME_NAME auth.allow $CLIENT_IP_1, $CLIENT_IP_2
 echo y | gluster volume stop $VOLUME_NAME
 gluster volume start $VOLUME_NAME
 service glusterfs-server stop
