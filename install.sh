@@ -4,10 +4,6 @@
 RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
 RANCHER_PORT=80
-OVIRT_POSTGRES_DATABASE=ovirt
-POSTGRES_PASSWORD=hellodocker
-OVIRT_PORT=8080
-OVIRT_PASSWORD=hellodocker
 
 if [ $(whoami) = "root" ]; then # if run as root
 
@@ -20,25 +16,9 @@ read -p "MYSQL Password ("$MYSQL_PASSWORD"): " $MYSQL_PASSWORD_NEW
 if [ $MYSQL_PASSWORD_NEW ]; then
     MYSQL_PASSWORD=$MYSQL_PASSWORD_NEW
 fi
-read -p "Ovirt Postgres Database ("$OVIRT_POSTGRES_DATABASE"): " $OVIRT_POSTGRES_DATABASE_NEW
-if [ $OVIRT_POSTGRES_DATABASE_NEW ]; then
-    OVIRT_POSTGRES_DATABASE=$OVIRT_POSTGRES_DATABASE_NEW
-fi
-read -p "Postgres Password ("$POSTGRES_PASSWORD"): " $POSTGRES_PASSWORD_NEW
-if [ $POSTGRES_PASSWORD_NEW ]; then
-    POSTGRES_PASSWORD=$POSTGRES_PASSWORD_NEW
-fi
 read -p "Rancher Port ("$RANCHER_PORT"): " $RANCHER_PORT_NEW
 if [ $RANCHER_PORT_NEW ]; then
     RANCHER_PORT=$RANCHER_PORT_NEW
-fi
-read -p "Ovirt Port ("$OVIRT_PORT"): " $OVIRT_PORT_NEW
-if [ $OVIRT_PORT_NEW ]; then
-    OVIRT_PORT=$OVIRT_PORT_NEW
-fi
-read -p "Ovirt Password ("$OVIRT_PASSWORD"): " $OVIRT_PASSWORD_NEW
-if [ $OVIRT_PASSWORD_NEW ]; then
-    OVIRT_PASSWORD=$OVIRT_PASSWORD_NEW
 fi
 
 # prepare system
@@ -64,13 +44,6 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
        -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
        mariadb:latest
 
-# install postgres
-docker run -d --name ovirtdb --restart=unless-stopped \
-       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
-       -e POSTGRES_USER=$OVIRT_POSTGRES_DATABASE \
-       -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-       rmohr/ovirt-postgres:latest
-
 # install rancher
 docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8080 \
        -e CATTLE_DB_CATTLE_MYSQL_HOST=$MYSQL_PORT_3306_TCP_ADDR \
@@ -79,14 +52,6 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8
        -e CATTLE_DB_CATTLE_USERNAME=root \
        -e CATTLE_DB_CATTLE_PASSWORD=$MYSQL_PASSWORD \
        rancher/server:latest
-
-# install ovirt
-docker run -d --restart=unless-stopped --link ovirtdb:postgres -p $OVIRT_PORT:8443 \
-       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
-       -e POSTGRES_USER=$OVIRT_POSTGRES_DATABASE  \
-       -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-       -e OVIRT_PASSWORD=$OVIRT_PASSWORD \
-       rmohr/ovirt-engine:latest
 
 else # not run as root
 echo "this program must be run as root"
