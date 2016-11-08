@@ -22,21 +22,19 @@ if [ $RANCHER_PORT_NEW ]; then
 fi
 
 # prepare system
-yum update -y
+apt-get update -y
 
 # install docker
-tee /etc/yum.repos.d/docker.repo <<EOF
-[dockerrepo]
-name=Docker Repository
-baseurl=https://yum.dockerproject.org/repo/main/centos/7/
-enabled=1
-gpgcheck=1
-gpgkey=https://yum.dockerproject.org/gpg
-EOF
-yum install -y docker-engine
-systemctl enable docker.service
-systemctl start docker
-docker run --rm hello-world
+apt-get install -y apt-transport-https ca-certificates
+apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" | sudo tee /etc/apt/sources.list.d/docker.list
+apt-get update -y
+apt-cache policy docker-engine
+apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+apt-get update -y
+apt-get install -y docker-engine
+service docker start
+docker run hello-world
 
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/lib/mysql/ \
