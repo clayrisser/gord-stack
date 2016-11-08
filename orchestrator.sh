@@ -4,6 +4,7 @@
 RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
 RANCHER_PORT=80
+BUCKET_NAME=rancher-backup
 
 if [ $(whoami) = "root" ]; then # if run as root
 
@@ -20,6 +21,10 @@ read -p "Rancher Port ("$RANCHER_PORT"): " $RANCHER_PORT_NEW
 if [ $RANCHER_PORT_NEW ]; then
     RANCHER_PORT=$RANCHER_PORT_NEW
 fi
+read -p "Bucket Name ("$BUCKET_NAME"): " $BUCKET_NAME_NEW
+if [ $BUCKET_NAME_NEW ]; then
+    BUCKET_NAME=$BUCKET_NAME_NEW
+fi
 
 # prepare system
 apt-get update -y
@@ -35,6 +40,17 @@ apt-get update -y
 apt-get install -y docker-engine
 service docker start
 docker run hello-world
+
+# install gcsfuse
+export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
+echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+apt-get update -y
+apt-get install -y gcsfuse
+
+# mount bucket
+mkdir -p /backups
+gcsfuse $BUCKET_NAME /backups
 
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/lib/mysql/ \
