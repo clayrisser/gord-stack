@@ -5,6 +5,7 @@ RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
 RANCHER_PORT=80
 DUPLICATI_PASSWORD=hellodocker
+DUPLICATI_PORT=8080
 
 if [ $(whoami) = "root" ]; then # if run as root
 
@@ -24,6 +25,10 @@ fi
 read -p "Duplicati Password ("$DUPLICATI_PASSWORD"): " $DUPLICATI_PASSWORD_NEW
 if [ $DUPLICATI_PASSWORD_NEW ]; then
     DUPLICATI_PASSWORD=$DUPLICATI_PASSWORD_NEW
+fi
+read -p "Duplicati Port ("$DUPLICATI_PORT"): " $DUPLICATI_PORT_NEW
+if [ $DUPLICATI_PORT_NEW ]; then
+    DUPLICATI_PORT=$DUPLICATI_PORT_NEW
 fi
 
 # prepare system
@@ -63,7 +68,7 @@ docker run -d --restart=unless-stopped \
        -v /var/lib/mysql/:/var/lib/mysql/ \
        -e DUPLICATI_PASS=$DUPLICATI_PASSWORD \
        -e MONO_EXTERNAL_ENCODINGS=UTF-8 \
-       -p 8200:8200 \
+       -p $DUPLICATI_PORT:8200 \
        intersoftlab/duplicati:canary
 
 else # not run as root
