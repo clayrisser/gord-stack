@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # settings
-DATA_DIRECTORY=/exports
+DATA_DIRECTORY=/exports/
+VOLUME_MOUNT=/dev/disk/by-id/google-disk-1
 
 if [ $(whoami) = "root" ]; then # if run as root
 
@@ -20,8 +21,11 @@ add-apt-repository ppa:semiosis/ubuntu-glusterfs-3.4
 apt-get update -y
 apt-get install -y glusterfs-server
 
-# create data directory
+# mount and create data directory
+mkfs.xfs -i size=512 $VOLUME_MOUNT
 mkdir -p $DATA_DIRECTORY
+echo '$VOLUME_MOUNT $DATA_DIRECTORY xfs defaults 1 2' >> /etc/fstab
+mount -a && mount
 chmod -R 777 $DATA_DIRECTORY
 
 # open permissions
