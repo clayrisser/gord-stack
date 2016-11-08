@@ -18,10 +18,11 @@ Docker is the contianer engine. Any application packaged as a docker container c
 The GORD stack requires a minimum of three servers. One server runs the orchastration platform. The rest of the servers are nodes. They run the GORD stack applications. You must have at least 2 nodes.
 
 #### Prepare orchastration server
+The orchastration server must be Ubuntu 16.04.
 SSH into the orchastration server and run the following command.
 
 ```
-https://raw.githubusercontent.com/jamrizzi/gord-stack/master/orchestrator.sh && sudo bash orchestrator.sh
+wget https://raw.githubusercontent.com/jamrizzi/gord-stack/master/orchestrator.sh && sudo bash orchestrator.sh
 ```
 
 If you want your orchastration platform backed up, go to port orchestrator-server:8080 and create a backup for /var/lib/mysql/ 
@@ -35,7 +36,7 @@ Create an environment in rancher and spin up some hosts. These hosts will be you
 On all of your nodes, run the following command.
 
 ```
-https://raw.githubusercontent.com/jamrizzi/gord-stack/master/node.sh && sudo bash node.sh
+wget https://raw.githubusercontent.com/jamrizzi/gord-stack/master/node.sh && sudo bash node.sh
 ```
 
 #### Prepare master-node
@@ -43,5 +44,9 @@ https://raw.githubusercontent.com/jamrizzi/gord-stack/master/node.sh && sudo bas
 One of your nodes is the master node. Run the following on that server.
 
 ```
-https://raw.githubusercontent.com/jamrizzi/gord-stack/master/master-node.sh && sudo bash master-node.sh
+wget https://raw.githubusercontent.com/jamrizzi/gord-stack/master/master-node.sh && sudo bash master-node.sh
 ```
+
+## Notes
+
+This has only been tested on Google Cloud.
