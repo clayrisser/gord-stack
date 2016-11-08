@@ -3,9 +3,11 @@
 # settings
 RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
-OVIRT_POSTGRES_DATABASE=ovirt
-POSTGRES_PASSWORD=hellodocker
 RANCHER_PORT=80
+OVIRT_POSTGRES_DATABASE=postgres
+POSTGRES_PASSWORD=hellodocker
+OVIRT_PORT=8080
+OVIRT_PASSWORD=hellodocker
 
 if [ $(whoami) = "root" ]; then # if run as root
 
@@ -30,7 +32,14 @@ read -p "Rancher Port ("$RANCHER_PORT"): " $RANCHER_PORT_NEW
 if [ $RANCHER_PORT_NEW ]; then
     RANCHER_PORT=$RANCHER_PORT_NEW
 fi
-
+read -p "Ovirt Port ("$OVIRT_PORT"): " $OVIRT_PORT_NEW
+if [ $OVIRT_PORT_NEW ]; then
+    OVIRT_PORT=$OVIRT_PORT_NEW
+fi
+read -p "Ovirt Password ("$OVIRT_PASSWORD"): " $OVIRT_PASSWORD_NEW
+if [ $OVIRT_PASSWORD_NEW ]; then
+    OVIRT_PASSWORD=$OVIRT_PASSWORD_NEW
+fi
 
 # prepare system
 yum update -y
@@ -59,7 +68,7 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
 mkdir -p /var/lib/postgresql/data/
 cp ./postgresql.conf /var/lib/postgresql/data/
 docker run -d --name ovritdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
-       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
+#       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        postgres:latest
 
@@ -70,6 +79,16 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8
        -e CATTLE_DB_CATTLE_MYSQL_NAME=$RANCHER_MYSQL_DATABASE \
        -e CATTLE_DB_CATTLE_USERNAME=root \
        -e CATTLE_DB_CATTLE_PASSWORD=$MYSQL_PASSWORD \
+       rancher/server:latest
+
+# install ovirt
+docker run -d --restart=unless-stopped --link ovirtdb:postgres -p $OVIRT_PORT:8443 \
+       -e POSTGRES_HOST=$POSTGRES_PORT_5432_TCP_ADDR \
+       -e POSTGRES_PORT=5432 \
+       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
+       -e POSTGRES_USER=postgres \
+       -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+       -e OVIRT_PASSWORD=$OVIRT_PASSWORD \
        rancher/server:latest
 
 else # not run as root
