@@ -67,7 +67,7 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
 # install postgres
 mkdir -p /var/lib/postgresql/data/
 cp ./postgresql.conf /var/lib/postgresql/data/
-docker run -d --name ovritdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
+docker run -d --name ovirtdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        postgres:latest
 
