@@ -68,7 +68,6 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
 mkdir -p /var/lib/postgresql/data/
 cp ./postgresql.conf /var/lib/postgresql/data/
 docker run -d --name ovritdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
-#       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        postgres:latest
 
@@ -89,7 +88,7 @@ docker run -d --restart=unless-stopped --link ovirtdb:postgres -p $OVIRT_PORT:84
        -e POSTGRES_USER=postgres \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        -e OVIRT_PASSWORD=$OVIRT_PASSWORD \
-       rancher/server:latest
+       rmohr/ovirt-engine:latest
 
 else # not run as root
 echo "this program must be run as root"
