@@ -25,7 +25,7 @@ mkdir -p $DATA_DIRECTORY
 chmod -R 777 $DATA_DIRECTORY
 
 # open permissions
-echo "option rpc-auth-allow-insecure on" | tee -a /etc/glusterfs/glusterd.vol
+sed -i "s/option transport.socket.read-fail-log off/option transport.socket.read-fail-log off\n    option rpc-auth-allow-insecure on/g" /etc/glusterfs/glusterd.vol
 service glustarfs-server stop
 service glustarfs-server start
 
