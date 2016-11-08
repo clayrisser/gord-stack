@@ -4,7 +4,7 @@
 RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
 RANCHER_PORT=80
-OVIRT_POSTGRES_DATABASE=postgres
+OVIRT_POSTGRES_DATABASE=ovirt
 POSTGRES_PASSWORD=hellodocker
 OVIRT_PORT=8080
 OVIRT_PASSWORD=hellodocker
@@ -65,15 +65,11 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
        mariadb:latest
 
 # install postgres
-docker run -d --name ovirtdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
+docker run -d --name ovirtdb --restart=unless-stopped \
+       -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
+       -e POSTGRES_USER=$OVIRT_POSTGRES_DATABASE \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-       postgres:latest
-echo "Waiting for container to start"
-sleep 30
-echo "Modifying configuration"
-sed -i "s/max_connections = 100/max_connections = 150/g" /var/lib/postgresql/data/postgresql.conf
-echo "Restarting container"
-docker restart ovirtdb
+       rmohr/ovirt-postgres:latest
 
 # install rancher
 docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8080 \
@@ -86,10 +82,8 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8
 
 # install ovirt
 docker run -d --restart=unless-stopped --link ovirtdb:postgres -p $OVIRT_PORT:8443 \
-       -e POSTGRES_HOST=$POSTGRES_PORT_5432_TCP_ADDR \
-       -e POSTGRES_PORT=5432 \
        -e POSTGRES_DB=$OVIRT_POSTGRES_DATABASE \
-       -e POSTGRES_USER=postgres \
+       -e POSTGRES_USER=$OVIRT_POSTGRES_DATABASE  \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        -e OVIRT_PASSWORD=$OVIRT_PASSWORD \
        rmohr/ovirt-engine:latest
