@@ -1,15 +1,20 @@
 #!/bin/bash
 
 # settings
+EMAIL=email@example.com
 RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
-RANCHER_PORT=80
+RANCHER_DOMAIN=cloud.yourdomain.com
 DUPLICATI_PASSWORD=hellodocker
-DUPLICATI_PORT=8080
+DUPLICATI_DOMAIN=cloud-backup.yourdomain.com
 
 if [ $(whoami) = "root" ]; then # if run as root
 
 # gather information
+read -p "Email ("$EMAIL"): " $EMAIL_NEW
+if [ $EMAIL_NEW ]; then
+    EMAIL=$EMAIL_NEW
+fi
 read -p "Rancher MYSQL Database ("$RANCHER_MYSQL_DATABASE"): " $RANCHER_MYSQL_DATABASE_NEW
 if [ $RANCHER_MYSQL_DATABASE_NEW ]; then
     RANCHER_MYSQL_DATABASE=$RANCHER_MYSQL_DATABASE_NEW
@@ -18,17 +23,17 @@ read -p "MYSQL Password ("$MYSQL_PASSWORD"): " $MYSQL_PASSWORD_NEW
 if [ $MYSQL_PASSWORD_NEW ]; then
     MYSQL_PASSWORD=$MYSQL_PASSWORD_NEW
 fi
-read -p "Rancher Port ("$RANCHER_PORT"): " $RANCHER_PORT_NEW
-if [ $RANCHER_PORT_NEW ]; then
-    RANCHER_PORT=$RANCHER_PORT_NEW
+read -p "Rancher Domain ("$RANCHER_DOMAIN"): " $RANCHER_DOMAIN_NEW
+if [ $RANCHER_DOMAIN_NEW ]; then
+    RANCHER_DOMAIN=$RANCHER_DOMAIN_NEW
 fi
 read -p "Duplicati Password ("$DUPLICATI_PASSWORD"): " $DUPLICATI_PASSWORD_NEW
 if [ $DUPLICATI_PASSWORD_NEW ]; then
     DUPLICATI_PASSWORD=$DUPLICATI_PASSWORD_NEW
 fi
-read -p "Duplicati Port ("$DUPLICATI_PORT"): " $DUPLICATI_PORT_NEW
-if [ $DUPLICATI_PORT_NEW ]; then
-    DUPLICATI_PORT=$DUPLICATI_PORT_NEW
+read -p "Duplicati Domain ("$DUPLICATI_DOMAIN"): " $DUPLICATI_DOMAIN_NEW
+if [ $DUPLICATI_DOMAIN_NEW ]; then
+    DUPLICATI_DOMAIN=$DUPLICATI_DOMAIN_NEW
 fi
 
 # prepare system
@@ -46,29 +51,63 @@ apt-get install -y docker-engine
 service docker start
 docker run hello-world
 
+# install nginx
+docker run -d --name nginx --restart=unless-stopped -p 80:80 -p 443:443 \
+       --name nginx \
+       -v /etc/nginx/conf.d  \
+       -v /etc/nginx/vhost.d \
+       -v /usr/share/nginx/html \
+       -v /etc/ssl/certs:/etc/nginx/certs:ro \
+       nginx
+
+# install docker-gen
+curl https://raw.githubusercontent.com/jwilder/nginx-proxy/master/nginx.tmpl > /etc/docker-gen/templates/nginx.tmpl
+docker run -d --restart=unless-stopped \
+       --name nginx-gen \
+       --volumes-from nginx \
+       -v /etc/docker-gen/templates/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro \
+       -v /var/run/docker.sock:/tmp/docker.sock:ro \
+       jwilder/docker-gen \
+       -notify-sighup nginx -watch -only-exposed -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+
+# install letsencrypt
+docker run -d --name nginx-letsencrypt \
+       -e NGINX_DOCKER_GEN_CONTAINER=nginx-gen \
+       --volumes-from nginx \
+       -v /etc/ssl/certs:/etc/nginx/certs:rw \
+       -v /var/run/docker.sock:/var/run/docker.sock:ro \
+       jrcs/letsencrypt-nginx-proxy-companion
+
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped \
-       -v /var/lib/mysql/:/var/lib/mysql/ \
+       -v /var/lib/mysql:/var/lib/mysql \
        -e MYSQL_DATABASE=$RANCHER_MYSQL_DATABASE \
        -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
        mariadb:latest
 
 # install rancher
-docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8080 \
+docker run -d --restart=unless-stopped --link rancherdb:mysql \
+       -p 8080:8080 \
        -e CATTLE_DB_CATTLE_MYSQL_HOST=$MYSQL_PORT_3306_TCP_ADDR \
        -e CATTLE_DB_CATTLE_MYSQL_PORT=3306 \
        -e CATTLE_DB_CATTLE_MYSQL_NAME=$RANCHER_MYSQL_DATABASE \
        -e CATTLE_DB_CATTLE_USERNAME=root \
        -e CATTLE_DB_CATTLE_PASSWORD=$MYSQL_PASSWORD \
+       -e VIRTUAL_HOST=$RANCHER_DOMAIN \
+       -e LETSENCRYPT_HOST=$RANCHER_DOMAIN \
+       -e LETSENCRYPT_EMAIL=$EMAIL \
        rancher/server:latest
 
 # install duplicati
 docker run -d --restart=unless-stopped \
-       -v /root/.config/Duplicati/:/root/.config/Duplicati/ \
-       -v /var/lib/mysql/:/var/lib/mysql/ \
+       -p 8200:8200 \
+       -v /root/.config/Duplicati:/root/.config/Duplicati \
+       -v /var/lib/mysql:/var/lib/mysql \
        -e DUPLICATI_PASS=$DUPLICATI_PASSWORD \
        -e MONO_EXTERNAL_ENCODINGS=UTF-8 \
-       -p $DUPLICATI_PORT:8200 \
+       -e VIRTUAL_HOST=$DUPLICATI_DOMAIN \
+       -e LETSENCRYPT_HOST=$DUPLICATI_DOMAIN \
+       -e LETSENCRYPT_EMAIL=$EMAIL \
        intersoftlab/duplicati:canary
 
 else # not run as root
