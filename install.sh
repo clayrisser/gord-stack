@@ -65,11 +65,15 @@ docker run -d --name rancherdb --restart=unless-stopped -v /var/lib/mysql/:/var/
        mariadb:latest
 
 # install postgres
-mkdir -p /var/lib/postgresql/data/
-cp ./postgresql.conf /var/lib/postgresql/data/
 docker run -d --name ovirtdb --restart=unless-stopped -v /var/lib/postgresql/data/:/var/lib/postgresql/data/ \
        -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
        postgres:latest
+echo "Waiting for container to start"
+sleep 30
+echo "Modifying configuration"
+sed -i "s/max_connections = 100/max_connections = 150/g" /var/lib/postgresql/data/postgresql.conf
+echo "Restarting container"
+docker restart ovirtdb
 
 # install rancher
 docker run -d --restart=unless-stopped --link rancherdb:mysql -p $RANCHER_PORT:8080 \
