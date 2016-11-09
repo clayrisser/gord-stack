@@ -54,21 +54,21 @@ docker run hello-world
 # install nginx
 docker run -d --name nginx --restart=unless-stopped -p 80:80 -p 443:443 \
        --name nginx-proxy \
-       -v /tmp/ssl/certs:/etc/nginx/certs:ro \
+       -v /exports/certs:/etc/nginx/certs:ro \
        -v /etc/nginx/vhost.d \
        -v /usr/share/nginx/html \
        -v /var/run/docker.sock:/tmp/docker.sock:ro \
        jwilder/nginx-proxy
 
 docker run -d --restart=unless-stopped \
-       -v /tmp/ssl/certs:/etc/nginx/certs:rw \
+       -v /exports/certs:/etc/nginx/certs:rw \
        --volumes-from nginx-proxy \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \
        jrcs/letsencrypt-nginx-proxy-companion
 
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped \
-       -v /var/lib/mysql:/var/lib/mysql \
+       -v /exports/rancher/mysql:/var/lib/mysql \
        -e MYSQL_DATABASE=$RANCHER_MYSQL_DATABASE \
        -e MYSQL_ROOT_PASSWORD=$MYSQL_PASSWORD \
        mariadb:latest
@@ -88,8 +88,8 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql \
 
 # install duplicati
 docker run -d --restart=unless-stopped \
-       -v /root/.config/Duplicati:/root/.config/Duplicati \
-       -v /var/lib/mysql:/var/lib/mysql \
+       -v /exports/duplicati/Duplicati:/root/.config/Duplicati \
+       -v /exports/duplicati/mysql:/var/lib/mysql \
        -e DUPLICATI_PASS=$DUPLICATI_PASSWORD \
        -e MONO_EXTERNAL_ENCODINGS=UTF-8 \
        -e VIRTUAL_HOST=$DUPLICATI_DOMAIN \
