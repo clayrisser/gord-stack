@@ -7,7 +7,7 @@ VOLUME_MOUNT=/dev/disk/by-id/google-disk-1
 if [ $(whoami) = "root" ]; then # if run as root
 
 # gather information
-read -p "Data Directory ("$DATA_DIRECTORY"): " $DATA_DIRECTORY_NEW
+read -p "Data Directory ("$DATA_DIRECTORY"): " DATA_DIRECTORY_NEW
 if [ $DATA_DIRECTORY_NEW ]; then
     DATA_DIRECTORY=$DATA_DIRECTORY_NEW
 fi
