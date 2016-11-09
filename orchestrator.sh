@@ -51,21 +51,14 @@ apt-get install -y docker-engine
 service docker start
 docker run hello-world
 
-# nginx-proxy
-docker run -d -p 80:80 -p 443:443 \
-       --name nginx-proxy \
-       -v /etc/ssl/certs:/etc/nginx/certs:ro \
-       -v /etc/nginx/vhost.d \
-       -v /usr/share/nginx/html \
+# letsencrypt-nginx-proxy
+docker run -d --name nginx-proxy --restart=unless-stopped \
+       -p 80:80 \
+       -p 443:443 \
        -v /var/run/docker.sock:/tmp/docker.sock:ro \
-       jwilder/nginx-proxy
-
-# letsencrypt
-docker run -d \
-       -v /etc/ssl/certs:/etc/nginx/certs:rw \
-       --volumes-from nginx-proxy \
-       -v /var/run/docker.sock:/var/run/docker.sock:ro \
-       jrcs/letsencrypt-nginx-proxy-companion
+       -v /etc/ssl/certs:/etc/letsencrypt/live \
+       -e LETSENCRYPT_EMAIL=$EMAIL \
+       eforce21/letsencrypt-nginx-proxy
 
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped \
@@ -83,8 +76,6 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql \
        -e CATTLE_DB_CATTLE_USERNAME=root \
        -e CATTLE_DB_CATTLE_PASSWORD=$MYSQL_PASSWORD \
        -e VIRTUAL_HOST=$RANCHER_DOMAIN \
-       -e LETSENCRYPT_HOST=$RANCHER_DOMAIN \
-       -e LETSENCRYPT_EMAIL=$EMAIL \
        rancher/server:latest
 
 # install duplicati
@@ -95,8 +86,6 @@ docker run -d --restart=unless-stopped \
        -e DUPLICATI_PASS=$DUPLICATI_PASSWORD \
        -e MONO_EXTERNAL_ENCODINGS=UTF-8 \
        -e VIRTUAL_HOST=$DUPLICATI_DOMAIN \
-       -e LETSENCRYPT_HOST=$DUPLICATI_DOMAIN \
-       -e LETSENCRYPT_EMAIL=$EMAIL \
        intersoftlab/duplicati:canary
 
 else # not run as root
