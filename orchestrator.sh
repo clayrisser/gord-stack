@@ -51,30 +51,19 @@ apt-get install -y docker-engine
 service docker start
 docker run hello-world
 
-# install nginx
-docker run -d --name nginx --restart=unless-stopped -p 80:80 -p 443:443 \
-       --name nginx \
-       -v /etc/nginx/conf.d  \
+# nginx-proxy
+docker run -d -p 80:80 -p 443:443 \
+       --name nginx-proxy \
+       -v /etc/ssl/certs:/etc/nginx/certs:ro \
        -v /etc/nginx/vhost.d \
        -v /usr/share/nginx/html \
-       -v /etc/ssl/certs:/etc/nginx/certs:ro \
-       nginx
-
-# install docker-gen
-curl https://raw.githubusercontent.com/jwilder/nginx-proxy/master/nginx.tmpl > /etc/docker-gen/templates/nginx.tmpl
-docker run -d --restart=unless-stopped \
-       --name nginx-gen \
-       --volumes-from nginx \
-       -v /etc/docker-gen/templates/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro \
        -v /var/run/docker.sock:/tmp/docker.sock:ro \
-       jwilder/docker-gen \
-       -notify-sighup nginx -watch -only-exposed -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+       jwilder/nginx-proxy
 
-# install letsencrypt
-docker run -d --name nginx-letsencrypt \
-       -e NGINX_DOCKER_GEN_CONTAINER=nginx-gen \
-       --volumes-from nginx \
+# letsencrypt
+docker run -d \
        -v /etc/ssl/certs:/etc/nginx/certs:rw \
+       --volumes-from nginx-proxy \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \
        jrcs/letsencrypt-nginx-proxy-companion
 
