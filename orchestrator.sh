@@ -54,11 +54,8 @@ docker run hello-world
 # letsencrypt-nginx-proxy
 docker run -d --name nginx-proxy --restart=unless-stopped \
        -p 80:80 \
-       -p 443:443 \
        -v /var/run/docker.sock:/tmp/docker.sock:ro \
-       -v /etc/ssl/certs:/etc/letsencrypt/live \
-       -e LETSENCRYPT_EMAIL=$EMAIL \
-       eforce21/letsencrypt-nginx-proxy
+       jwilder/nginx-proxy
 
 # install mariadb
 docker run -d --name rancherdb --restart=unless-stopped \
