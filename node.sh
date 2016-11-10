@@ -11,6 +11,10 @@ read -p "Data Directory ("$DATA_DIRECTORY"): " DATA_DIRECTORY_NEW
 if [ $DATA_DIRECTORY_NEW ]; then
     DATA_DIRECTORY=$DATA_DIRECTORY_NEW
 fi
+read -p "Volume Mount ("$VOLUME_MOUNT"): " VOLUME_MOUNT_NEW
+if [ $VOLUME_MOUNT_NEW ]; then
+    VOLUME_MOUNT=$VOLUME_MOUNT_NEW
+fi
 
 # prepare system
 apt-get update -y
