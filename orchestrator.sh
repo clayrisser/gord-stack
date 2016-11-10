@@ -89,7 +89,7 @@ docker run -d --restart=unless-stopped --link rancherdb:mysql \
 # install duplicati
 docker run -d --restart=unless-stopped \
        -v /exports/duplicati/Duplicati:/root/.config/Duplicati \
-       -v /exports/duplicati/mysql:/var/lib/mysql \
+       -v /exports:/exports \
        -e DUPLICATI_PASS=$DUPLICATI_PASSWORD \
        -e MONO_EXTERNAL_ENCODINGS=UTF-8 \
        -e VIRTUAL_HOST=$DUPLICATI_DOMAIN \
