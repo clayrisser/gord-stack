@@ -24,6 +24,9 @@ apt-get install -y python-software-properties
 apt-get update -y
 apt-get install -y glusterfs-server
 
+# install xfsprogs
+apt-get install -y xfsprogs
+
 # mount and create data directory
 mkfs.xfs -i size=512 $VOLUME_MOUNT
 mkdir -p $DATA_DIRECTORY
