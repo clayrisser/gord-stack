@@ -6,7 +6,7 @@ RANCHER_MYSQL_DATABASE=rancher
 MYSQL_PASSWORD=hellodocker
 RANCHER_DOMAIN=cloud.yourdomain.com
 DUPLICATI_PASSWORD=hellodocker
-DUPLICATI_DOMAIN=cloud-backup.yourdomain.com
+DUPLICATI_DOMAIN=backup.yourdomain.com
 
 if [ $(whoami) = "root" ]; then # if run as root
 
