@@ -11,7 +11,7 @@ DUPLICATI_DOMAIN=backup.yourdomain.com
 if [ $(whoami) = "root" ]; then # if run as root
 
 # gather information
-read -p "Email ("$EMAIL"): " $EMAIL_NEW
+read -p "Email ("$EMAIL"): " EMAIL_NEW
 if [ $EMAIL_NEW ]; then
     EMAIL=$EMAIL_NEW
 fi
