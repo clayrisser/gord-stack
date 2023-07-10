@@ -2,6 +2,8 @@
 
 A stack for managing a highly available cloud platform.
 
+![](assets/gord-stack.png)
+
 GORD stands for . . .
 
 ### Glusterfs
